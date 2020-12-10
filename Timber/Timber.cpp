@@ -105,6 +105,17 @@ int main()
 		// Draw our game scene here
 		window.draw(spriteBackground);
 
+		// Draw the clouds
+		window.draw(spriteCloud1);
+		window.draw(spriteCloud2);
+		window.draw(spriteCloud3);
+
+		// Draw the tree
+		window.draw(spriteTree);
+
+		// Draw the insect
+		window.draw(spriteBee);
+
 		// Show everything we just drew
 		window.display();
 	}
