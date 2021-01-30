@@ -3,6 +3,22 @@
 
 using namespace sf;
 
+// Function declaration
+void updateBranches(int seed);
+
+const int NUM_CLOUDS = 3;
+Sprite clouds[NUM_CLOUDS];
+bool cloudsActive[NUM_CLOUDS];
+float cloudSpeeds[NUM_CLOUDS];
+
+const int NUM_BRANCHES = 6;
+Sprite branches[NUM_BRANCHES];
+
+// Where is the player/branch?
+// Left or Right
+enum class side { LEFT, RIGHT, NONE };
+side branchPositions[NUM_BRANCHES];
+
 int main()
 {
 	// Create a video mode object
@@ -52,28 +68,21 @@ int main()
 	// Load 1 new texture
 	textureCloud.loadFromFile("graphics/cloud.png");
 
-	// 3 New sprites with the same texture
-	Sprite spriteCloud1;
-	Sprite spriteCloud2;
-	Sprite spriteCloud3;
-	spriteCloud1.setTexture(textureCloud);
-	spriteCloud2.setTexture(textureCloud);
-	spriteCloud3.setTexture(textureCloud);
+	// Create the clouds
+	for (int i = 0; i < NUM_CLOUDS; i++)
+	{
+		clouds[i].setTexture(textureCloud);
 
-	// Position the clouds on the left of the screen at different heights
-	spriteCloud1.setPosition(0, 0);
-	spriteCloud2.setPosition(0, 250);
-	spriteCloud3.setPosition(0, 500);
+		// Position the clouds on the left of the screen at different heights
+		clouds[i].setPosition(0, 250 * i); // 0, 250, 500
+		
+		// Are the clouds currently on the screen?
+		cloudsActive[i] = false;
 
-	// Are the clouds currently on the screen?
-	bool cloud1Active = false;
-	bool cloud2Active = false;
-	bool cloud3Active = false;
+		// How fast is each cloud
+		cloudSpeeds[i] = 0.0f;
 
-	// How fast is each cloud?
-	float cloud1Speed = 0.0f;
-	float cloud2Speed = 0.0f;
-	float cloud3Speed = 0.0f;
+	}
 
 	// Variables to control time
 	Clock clock;
@@ -131,6 +140,21 @@ int main()
 
 	scoreText.setPosition(20, 20);
 
+	// Prepare 6 branches
+	Texture textureBranch;
+	textureBranch.loadFromFile("graphics/branch.png");
+
+	// Set the texture for each branch sprite
+	for (int i = 0; i < NUM_BRANCHES; i++) 
+	{
+		branches[i].setTexture(textureBranch);
+		branches[i].setPosition(-2000, -2000);
+
+		// Set the sprite's origin to dead centre
+		// We can then spin it round without changing its position
+		branches[i].setOrigin(220, 20);
+	}
+
 	while (window.isOpen())
 	{
 		/*
@@ -171,7 +195,8 @@ int main()
 			// resize up the time bar
 			timeBar.setSize(Vector2f(timeBarWidthPerSecond * timeRemaining, timeBarHeight));
 
-			if (timeRemaining <= 0.0f) {
+			if (timeRemaining <= 0.0f) 
+			{
 				// Paus the game
 				paused = true;
 
@@ -214,84 +239,35 @@ int main()
 			}
 
 			// Manage the clouds
-			// Cloud 1
-			if (!cloud1Active)
+			for (int i = 0; i < NUM_CLOUDS; i++)
 			{
-				// How fast is the cloud
-				srand((int)time(0) * 10);
-				cloud1Speed = (rand() % 200);
-
-				// How high is the cloud
-				srand((int)time(0) * 10);
-				float height = (rand() % 150);
-				spriteCloud1.setPosition(-200, height);
-				cloud1Active = true;
-			}
-			else
-			{
-				spriteCloud1.setPosition(
-					spriteCloud1.getPosition().x + (cloud1Speed * dt.asSeconds()), spriteCloud1.getPosition().y
-				);
-
-				// Has the cloud reached the right hand edge of the screen?
-				if (spriteCloud1.getPosition().x > 1920)
+				if (!cloudsActive[i])
 				{
-					// Set it up ready to be a whole new cloud next frame
-					cloud1Active = false;
+					// Each cloud has different speed and height
+					int scaleFactor = 10 * (i + 1);
+
+					// How fast is the cloud
+					srand((int)time(0) * scaleFactor);
+					cloudSpeeds[i] = (rand() % 200);
+
+					// How high is the cloud
+					srand((int)time(0) * scaleFactor);
+					float height = (rand() % 150);
+					clouds[i].setPosition(-200, height);
+					cloudsActive[i] = true;
 				}
-			}
-
-			// Cloud 2
-			if (!cloud2Active)
-			{
-				// How fast is the cloud
-				srand((int)time(0) * 20);
-				cloud2Speed = (rand() % 200);
-
-				// How high is the cloud
-				srand((int)time(0) * 20);
-				float height = (rand() % 150);
-				spriteCloud2.setPosition(-200, height);
-				cloud2Active = true;
-			}
-			else
-			{
-				spriteCloud2.setPosition(
-					spriteCloud2.getPosition().x + (cloud2Speed * dt.asSeconds()), spriteCloud2.getPosition().y
-				);
-
-				// Has the cloud reached the right hand edge of the screen?
-				if (spriteCloud2.getPosition().x > 1920)
+				else
 				{
-					// Set it up ready to be a whole new cloud next frame
-					cloud2Active = false;
-				}
-			}
+					clouds[i].setPosition(
+						clouds[i].getPosition().x + (cloudSpeeds[i] * dt.asSeconds()), clouds[i].getPosition().y
+					);
 
-			// Cloud 3
-			if (!cloud3Active)
-			{
-				// How fast is the cloud
-				srand((int)time(0) * 30);
-				cloud3Speed = (rand() % 200);
-
-				// How high is the cloud
-				srand((int)time(0) * 30);
-				float height = (rand() % 150);
-				spriteCloud3.setPosition(-200, height);
-				cloud3Active = true;
-			}
-			else
-			{
-				spriteCloud3.setPosition(
-					spriteCloud3.getPosition().x + (cloud3Speed * dt.asSeconds()), spriteCloud3.getPosition().y
-				);
-
-				// Has the cloud reached the right hand edge of the screen?
-				if (spriteCloud3.getPosition().x > 1920)
-				{
-					// Set it up ready to be a whole new cloud next frame
-					cloud3Active = false;
+					// Has the cloud reached the right hand edge of the screen?
+					if (clouds[i].getPosition().x > 1920)
+					{
+						// Set it up ready to be a whole new cloud next frame
+						cloudsActive[i] = false;
+					}
 				}
 			}
 
@@ -299,6 +275,34 @@ int main()
 			std::stringstream ss;
 			ss << "Score = " << score;
 			scoreText.setString(ss.str());
+
+			// Update the branch sprites
+			for (int i = 0; i < NUM_BRANCHES; i++)
+			{
+				float height = i * 150;
+
+				if (branchPositions[i] == side::LEFT)
+				{
+					// Move the spirte to the left side
+					branches[i].setPosition(610, height);
+					
+					// Flip the sprite round the other way
+					branches[i].setRotation(180);
+				}
+				else if (branchPositions[i] == side::RIGHT)
+				{
+					// Move the sprite to the right side
+					branches[i].setPosition(1330, height);
+
+					// Set the sprite rotation to normal
+					branches[i].setRotation(0);
+				}
+				else
+				{
+					// Hide the branch
+					branches[i].setPosition(3000, height);
+				}
+			}
 		}
 
 		/*
@@ -314,9 +318,16 @@ int main()
 		window.draw(spriteBackground);
 
 		// Draw the clouds
-		window.draw(spriteCloud1);
-		window.draw(spriteCloud2);
-		window.draw(spriteCloud3);
+		for (int i = 0; i < NUM_CLOUDS; i++)
+		{
+			window.draw(clouds[i]);
+		}
+
+		// Draw the branches
+		for (int i = 0; i < NUM_BRANCHES; i++)
+		{
+			window.draw(branches[i]);
+		}
 
 		// Draw the tree
 		window.draw(spriteTree);
@@ -341,4 +352,34 @@ int main()
 	}
 
 	return 0;
+}
+
+// Function definition
+void updateBranches(int seed)
+{
+	// Move all the branches down one place
+	for (int j = NUM_BRANCHES - 1; j > 0; j--)
+	{
+		branchPositions[j] = branchPositions[j - 1];
+	}
+
+	// Spawn a new branch at position 0
+	// LEFT, RIGHT or NONE
+	srand((int)time(0) + seed);
+	int r = (rand() % 5);
+
+	switch (r)
+	{
+		case 0:
+			branchPositions[0] = side::LEFT;
+			break;
+
+		case 1:
+			branchPositions[0] = side::RIGHT;
+			break;
+
+		default:
+			branchPositions[0] = side::NONE;
+			break;
+	}
 }
