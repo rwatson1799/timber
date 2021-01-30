@@ -1,5 +1,6 @@
 #include <sstream>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 using namespace sf;
 
@@ -198,6 +199,26 @@ int main()
 	// Control the player input
 	bool acceptInput = false;
 
+	// Prepare the sounds
+	// the chopping sound
+	SoundBuffer chopBuffer;
+	chopBuffer.loadFromFile("sound/chop.wav");
+	Sound chop;
+	chop.setBuffer(chopBuffer);
+
+	// the player death sound
+	SoundBuffer deathBuffer;
+	deathBuffer.loadFromFile("sound/death.wav");
+	Sound death;
+	death.setBuffer(deathBuffer);
+
+	// out of time sound
+	SoundBuffer ootBuffer;
+	ootBuffer.loadFromFile("sound/out_of_time.wav");
+	Sound outOfTime;
+	outOfTime.setBuffer(ootBuffer);
+
+
 	while (window.isOpen())
 	{
 		/*
@@ -274,6 +295,9 @@ int main()
 				logActive = true;
 
 				acceptInput = false;
+
+				// Play a chop sound
+				chop.play();
 			}
 
 			// Handle the left cursor key
@@ -299,6 +323,9 @@ int main()
 				logActive = true;
 
 				acceptInput = false;
+
+				// Play a chop sound
+				chop.play();
 			}
 		}
 
@@ -321,7 +348,7 @@ int main()
 
 			if (timeRemaining <= 0.0f) 
 			{
-				// Paus the game
+				// Pause the game
 				paused = true;
 
 				// Change the message shown to the player
@@ -331,6 +358,9 @@ int main()
 				FloatRect textRect = messageText.getLocalBounds();
 				messageText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
 				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+
+				// Play the out of time sound
+				outOfTime.play();
 			}
 
 			// Setup the bee
@@ -470,6 +500,9 @@ int main()
 					textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f
 				);
 				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
+
+				// Play the death sound
+				death.play();
 			}
 		}
 
