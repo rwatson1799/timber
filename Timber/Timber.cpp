@@ -205,6 +205,19 @@ int main()
 		Handles the player input
 		************************
 		*/
+		Event event;
+
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased && !paused)
+			{
+				// Listen for key presses again
+				acceptInput = true;
+
+				// hide the axe
+				spriteAxe.setPosition(2000, spriteAxe.getPosition().y);
+			}
+		}
 		
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
 		{
@@ -219,21 +232,75 @@ int main()
 			// Reset the time and the score
 			score = 0;
 			timeRemaining = 6;
+
+			// Make all the branches disapper - starting in the second position
+			for (int i = 1; i < NUM_BRANCHES; i++)
+			{
+				branchPositions[i] = side::NONE;
+			}
+
+			// Make sure the gravestone is hidden
+			spriteRIP.setPosition(675, 2000);
+
+			// Move the player into position
+			spritePlayer.setPosition(580, 720);
+
+			acceptInput = true;
 		}
 
-		// Make all the branches disapper - starting in the second position
-		for (int i = 1; i < NUM_BRANCHES; i++)
+		// Wrap the player controls to make sure we are accepting input
+		if (acceptInput)
 		{
-			branchPositions[i] = side::NONE;
+			// First handle pressing the right cursor key
+			if (Keyboard::isKeyPressed(Keyboard::Right))
+			{
+				// Make sure the player is on the right
+				playerSide = side::RIGHT;
+				score++;
+
+				// Add to the amount of time remaining
+				timeRemaining += (2 / score) + .15;
+
+				spriteAxe.setPosition(AXE_POSITION_RIGHT, spriteAxe.getPosition().y);
+
+				spritePlayer.setPosition(1200, 720);
+
+				// Update the branches
+				updateBranches(score);
+
+				// Set the log flying to the left
+				spriteLog.setPosition(810, 720);
+				logSpeedX = -5000;
+				logActive = true;
+
+				acceptInput = false;
+			}
+
+			// Handle the left cursor key
+			if (Keyboard::isKeyPressed(Keyboard::Left))
+			{
+				// Make sure the player is on the left
+				playerSide = side::LEFT;
+				score++;
+
+				// Add to the amount of time remaining
+				timeRemaining += (2 / score) + .15;
+
+				spriteAxe.setPosition(AXE_POSITION_LEFT, spriteAxe.getPosition().y);
+
+				spritePlayer.setPosition(580, 720);
+
+				// update the branches
+				updateBranches(score);
+
+				// set the log flying
+				spriteLog.setPosition(810, 720);
+				logSpeedX = 5000;
+				logActive = true;
+
+				acceptInput = false;
+			}
 		}
-
-		// Make sure the gravestone is hidden
-		spriteRIP.setPosition(675, 2000);
-
-		// Move the player into position
-		spritePlayer.setPosition(580, 720);
-
-		acceptInput = true;
 
 		/*
 		************************
@@ -359,6 +426,50 @@ int main()
 					// Hide the branch
 					branches[i].setPosition(3000, height);
 				}
+			}
+
+			// Handle a flying log
+			if (logActive)
+			{
+				spriteLog.setPosition(
+					spriteLog.getPosition().x + (logSpeedX * dt.asSeconds()),
+					spriteLog.getPosition().y + (logSpeedY * dt.asSeconds())
+				);
+
+				// Has the log reached the edge?
+				if (spriteLog.getPosition().x < -100 || spriteLog.getPosition().x > 2000)
+				{
+					// Set it up ready to be a whole new log next frame
+					logActive = false;
+					spriteLog.setPosition(810, 720);
+
+				}
+
+			}
+
+			// has the player been squised by a branch?
+			if (branchPositions[5] == playerSide)
+			{
+				// death
+				paused = true;
+				acceptInput = false;
+
+				// Draw the gravestone
+				spriteRIP.setPosition(525, 760);
+
+				// hide the player
+				spritePlayer.setPosition(2000, 660);
+
+				// Change the text of the message
+				messageText.setString("SQUISHED!!");
+
+				// Center it on the screen
+				FloatRect textRect = messageText.getLocalBounds();
+
+				messageText.setOrigin(
+					textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f
+				);
+				messageText.setPosition(1920 / 2.0f, 1080 / 2.0f);
 			}
 		}
 
